@@ -10,6 +10,10 @@
   <name>css.java</name>
   <description>CSS/CSS3 parser</description>
 
+  <properties>
+    <!-- Encoding UTF-8 -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
   <build>
     <plugins>
       <plugin>
