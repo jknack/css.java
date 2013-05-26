@@ -1,5 +1,6 @@
 package com.github.jknack.css;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,7 @@ import com.github.jknack.css.expression.URLExpression;
 import com.github.jknack.css.internal.CssBaseVisitor;
 import com.github.jknack.css.internal.CssParser.AttributeContext;
 import com.github.jknack.css.internal.CssParser.BlockContext;
+import com.github.jknack.css.internal.CssParser.CharSetContext;
 import com.github.jknack.css.internal.CssParser.ClassSelectorContext;
 import com.github.jknack.css.internal.CssParser.CombinatorContext;
 import com.github.jknack.css.internal.CssParser.DeclarationContext;
@@ -59,7 +61,7 @@ import com.github.jknack.css.selector.SiblingCombinator;
 import com.github.jknack.css.selector.TypeSelector;
 import com.github.jknack.css.selector.UniversalSelector;
 
-public class CSSBuilder extends CssBaseVisitor<Object> {
+class CSSBuilder extends CssBaseVisitor<Object> {
 
   @Override
   public Object visit(final ParseTree tree) {
@@ -67,8 +69,19 @@ public class CSSBuilder extends CssBaseVisitor<Object> {
   }
 
   @Override
+  public Charset visitCharSet(final CharSetContext ctx) {
+    String charSet = text(ctx.STRING());
+    charSet = charSet.substring(1, charSet.length() -1);
+    return Charset.forName(charSet);
+  }
+
+  @Override
   public Object visitStyleSheet(final StyleSheetContext ctx) {
     StyleSheet sheet = new StyleSheet();
+    // charset
+    if (ctx.charSet() != null) {
+      sheet.charset(visitCharSet(ctx.charSet()));
+    }
     for (StatementContext statementCtx : ctx.statement()) {
       Object candidate = visitChildren(statementCtx);
       if (candidate instanceof Rule) {
