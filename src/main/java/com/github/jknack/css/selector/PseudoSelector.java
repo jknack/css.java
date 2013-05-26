@@ -1,4 +1,5 @@
-package com.github.jknack.css;
+package com.github.jknack.css.selector;
+
 
 public class PseudoSelector extends AbstractSelector {
 

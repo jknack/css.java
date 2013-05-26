@@ -1,6 +1,7 @@
-package com.github.jknack.css;
+package com.github.jknack.css.selector;
 
 import static org.apache.commons.lang3.Validate.notEmpty;
+
 
 public class IdSelector extends AbstractSelector {
 

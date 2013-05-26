@@ -1,4 +1,6 @@
-package com.github.jknack.css;
+package com.github.jknack.css.selector;
+
+import com.github.jknack.css.Selector;
 
 public abstract class AbstractSelector implements Selector {
 

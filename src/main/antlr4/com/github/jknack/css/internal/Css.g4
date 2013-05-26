@@ -147,18 +147,18 @@ priority
 
 expression
   :
-    term (OPERATOR? term)*
+    left=term ((',' | '/')? right+=term)*
   ;
 
 term
   :
-    number
-  | STRING
-  | IDENT
-  | URL
-  | HEX_COLOR
-  | calc
-  | function
+    number    #numberExpr
+  | STRING    #stringExpr
+  | IDENT     #idExpr
+  | URL       #urlExpr
+  | HEX_COLOR #hexColorExpr
+  | calc      #calcExpr
+  | function  #functionExpr
   ;
 
 calc
@@ -183,10 +183,10 @@ attributeReference
 
 unit
   :
-    NUMBER
-  | '(' sum ')'
-  | calc
-  | attributeReference
+    NUMBER      #calcNumberDecl
+  | '(' sum ')' #calcSumDecl
+  | calc        #calcDecl
+  | attributeReference #attributeReferenceDecl
   ;
 
 function
@@ -336,12 +336,6 @@ URL
   | [uU][rR][lL] '(' .*? ')'
   ;
 
-OPERATOR
-  :
-    '/'
-  | ','
-  ;
-
 CLASS
   :
     '.' IDENT
@@ -431,8 +425,14 @@ DIGIT
 
 STRING
   :
-    '"'  ~[\r\n]*? '"'
-  | '\'' ~[\r\n]*? '\''
+    '"'  (ESC | (~[\r\n]))*? '"'
+  | '\'' (ESC | (~[\r\n]))*? '\''
+  ;
+
+fragment
+ESC
+  :
+    '\\' ('"' | '\'' | '\n')
   ;
 
 XML_COMMENT

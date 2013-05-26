@@ -29,4 +29,15 @@ public class AbstractTest {
     assertEquals(expected, sheet.first().first().name());
     return sheet;
   }
+
+  public Rule rule(final String content) {
+    return rule(content, false);
+  }
+
+  public Rule rule(final String content, final boolean debug) {
+    StyleSheet sheet = parse(content, debug);
+    assertNotNull(sheet);
+    assertNotNull(sheet.first());
+    return sheet.first();
+  }
 }
