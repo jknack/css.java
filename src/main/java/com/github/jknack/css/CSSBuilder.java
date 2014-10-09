@@ -33,6 +33,7 @@ import com.github.jknack.css.expression.NumberExpression;
 import com.github.jknack.css.expression.StringExpression;
 import com.github.jknack.css.expression.URLExpression;
 import com.github.jknack.css.internal.CssBaseVisitor;
+import com.github.jknack.css.internal.CssParser;
 import com.github.jknack.css.internal.CssParser.AttributeContext;
 import com.github.jknack.css.internal.CssParser.BlockContext;
 import com.github.jknack.css.internal.CssParser.CharSetContext;
@@ -49,6 +50,7 @@ import com.github.jknack.css.internal.CssParser.IdentNamespaceUniversalSelectorC
 import com.github.jknack.css.internal.CssParser.NegationContext;
 import com.github.jknack.css.internal.CssParser.NonamespaceTypeSelectorContext;
 import com.github.jknack.css.internal.CssParser.NonamespaceUniversalSelectorContext;
+import com.github.jknack.css.internal.CssParser.NumberContext;
 import com.github.jknack.css.internal.CssParser.NumberExprContext;
 import com.github.jknack.css.internal.CssParser.PseudoContext;
 import com.github.jknack.css.internal.CssParser.RuleSetContext;
@@ -80,6 +82,11 @@ import com.github.jknack.css.selector.UniversalSelector;
 
 class CSSBuilder extends CssBaseVisitor<Object> {
 
+//	public static boolean debug = true;
+//	public static int debugLevel = 2;
+//	public static int debugLevel = 1;
+	public static int debugLevel = 0;
+	
   @Override
   public Object visit(final ParseTree tree) {
     return super.visit(tree);
@@ -87,48 +94,203 @@ class CSSBuilder extends CssBaseVisitor<Object> {
 
   @Override
   public Charset visitCharSet(final CharSetContext ctx) {
+	if (debugLevel > 0) {
+		System.out.println("visitCharSet");
+	}
+	
     String charSet = text(ctx.STRING());
     charSet = charSet.substring(1, charSet.length() -1);
     return Charset.forName(charSet);
   }
 
+//  @Override
+//  public Object visitStyleSheet(CssParser.StyleSheetContext ctx) { 
+//	if (debugLevel > 0) {
+//		System.out.println("visitStyleSheet");
+//	}	  
+//	return visitChildren(ctx);
+//  }  
+  
   @Override
   public Object visitStyleSheet(final StyleSheetContext ctx) {
+	if (debugLevel > 0) {
+		System.out.println("visitStyleSheet");
+	}
+		
     StyleSheet sheet = new StyleSheet();
     // charset
     if (ctx.charSet() != null) {
       sheet.charset(visitCharSet(ctx.charSet()));
     }
+    
     for (StatementContext statementCtx : ctx.statement()) {
-      Object candidate = visitChildren(statementCtx);
-      if (candidate instanceof Rule) {
-        sheet.add((Rule) candidate);
-      }
+    	if (debugLevel > 0) System.out.println("visitStyleSheet: statement: " + statementCtx.getText());
+    	
+		  Object candidate = visitChildren(statementCtx);
+		  if (candidate == null) {
+			  if (debugLevel > 0) System.out.println("visitStyleSheet: skipping null object");
+		  } else {      
+		      if (candidate instanceof Rule) {
+		    	  if (debugLevel > 0) System.out.println("visitStyleSheet: adding Rule object: " + ((Rule) candidate).first().name());
+		    	  sheet.add((Rule) candidate);
+		      } else if (candidate instanceof KeyframeBlock){
+		    	  if (debugLevel > 0) System.out.println("visitStyleSheet: adding KeyframeBlock object: " + ((KeyframeBlock) candidate).name);
+		    	  sheet.add((KeyframeBlock) candidate);			  
+		      } else {
+		    	  if (debugLevel > 0) System.out.println("visitStyleSheet: skipping object type: " + candidate.toString());
+			  }
+		  }
+		  
+		  //candidate = visitKeyframes((CssParser.KeyframesContext) statementCtx);
+//		  if (candidate == null) {
+//			  System.out.println("visitStyleSheet: skipping null object");
+//		  } else {
+//			  System.out.println("visitStyleSheet: skipping object type: " + candidate.toString());
+//		  }
     }
     return sheet;
   }
 
+  // Lootsie
+  @Override
+  public Object visitKeyframes(CssParser.KeyframesContext ctx) { 
+	if (debugLevel > 0) {
+		System.out.println("visitKeyframes " + ctx.IDENT().getText());
+		//ctx.getText() 
+	}
+	  
+	KeyframeBlock keyframeBlock = new KeyframeBlock();	
+	keyframeBlock.name = ctx.IDENT().getText();
+	
+	visitKeyframeblock(keyframeBlock, ctx.keyframeblock());
+	
+	return keyframeBlock;
+//	return null;
+//	  return visitChildren(ctx); 
+  }
+  
+  // Lootsie
+  // kekyframeblock child of keyframes
+//  @Override
+//  public Object visitKeyframeblock(CssParser.KeyframeblockContext ctx) {
+  public Object visitKeyframeblock(final KeyframeBlock keyframeBlock, CssParser.KeyframeblockContext ctx) {  
+	if (debugLevel > 0) System.out.println("\t visitKeyframeblock " + ctx.getText());
+	
+	List<NumberContext> numlist = ctx.number();
+	List<BlockContext> blocklist = ctx.block();
+	for (int i=0; (i<numlist.size()) && (i<blocklist.size());i++) {
+		NumberContext num = numlist.get(i);
+		BlockContext block = blocklist.get(i);
+		
+		Keyframe keyframe = new Keyframe();
+		NumberExpression numex = new NumberExpression(num.getText());
+		keyframe.percentage = numex.number().intValue(); 
+				
+		if (debugLevel > 0) System.out.println("\t visitKeyframeblock number["+i+"]:" + num.getText());		
+		if (debugLevel > 0) System.out.println("\t visitKeyframeblock block["+i+"]" + block.getText());		
+		
+		//visitChildren(block);
+		visitBlock(keyframe, block);		
+		
+		if (debugLevel > 1) System.out.println("\t visitKeyframeblock keyframe: " + keyframe.toString());
+		keyframeBlock.add(keyframe);
+	}
+	
+	if (debugLevel > 1) System.out.println("\t visitKeyframeblock keyframeBlock: " + keyframeBlock.toString());
+	
+	
+//	 return visitChildren(ctx);
+	 return null;
+  }  
+  
   @Override
   public Object visitRuleSet(final RuleSetContext ctx) {
+	if (debugLevel > 0) {
+		System.out.println("visitRuleSet");
+	}
+		
     Rule rule = new Rule();
     List<Selector> selectors = visitSelectorGroup(ctx.selectorGroup());
     for (Selector selector : selectors) {
       rule.add(selector);
     }
     visitBlock(rule, ctx.block());
+    
+	if (debugLevel > 0) {
+		System.out.println("\t visitRuleSet finished: " + rule.first().toString());
+	}    
     return rule;
   }
 
-  private void visitBlock(final Rule rule, final BlockContext block) {
+  // Lootsie
+  @Override 
+  public Object visitBlock(CssParser.BlockContext ctx) { 
+	  if (debugLevel > 0) System.out.println("\t visitBlock " + ctx.getText());
+		
+	  return visitChildren(ctx); 
+  }  
+  
+  // for block in subtree of keyframe
+  private void visitBlock(final Keyframe keyframe, final BlockContext block) {
+	if (debugLevel > 0) {
+		System.out.println("\t visitBlock (Keyframe) ");
+	}
+	  
     for (DeclarationContext declarationCtx : block.declaration()) {
       String name = text(declarationCtx.IDENT());
-      Expression expression = visitExpression(declarationCtx.expression());
-      rule.property(name, expression);
+	  	if (debugLevel > 0) System.out.println("\t visitBlock: (Keyframe) " + name);
+	  	
+//      Expression expression = visitExpression(declarationCtx.expression());
+	  	List<Expression> expressionList = new ArrayList<Expression>();
+	  	for (ExpressionContext expressionCtx : declarationCtx.expression()) {
+	  		Expression expression = (Expression) visitExpression(expressionCtx);
+	  		// I should have a list of expressions per name?
+	  		expressionList.add(expression);
+	  	}
+
+	  	keyframe.addProperty(name, expressionList);
+    }
+  }  
+  
+  // for Block in subtree of rule
+  private void visitBlock(final Rule rule, final BlockContext block) {
+	if (debugLevel > 0) System.out.println("\t visitBlock (Rule)");
+	  
+    for (DeclarationContext declarationCtx : block.declaration()) {
+      String name = text(declarationCtx.IDENT());
+	  	if (debugLevel > 0) System.out.println("\t visitBlock: (Rule) " + name);
+
+	  	
+//	  	Expression expression = visitExpression(declarationCtx.expression());
+	  	List<Expression> expressionList = new ArrayList<Expression>();
+	  	for (ExpressionContext expressionCtx : declarationCtx.expression()) {
+	  		Expression expression = (Expression) visitExpression(expressionCtx);
+	  		// I should have a list of expressions per name?
+	  		expressionList.add(expression);
+	  	}
+	  	
+	  	rule.property(name, expressionList);
+	  	
     }
   }
 
+  @Override 
+  public Object visitDeclaration(CssParser.DeclarationContext ctx) { 
+		if (debugLevel > 0) {
+			System.out.println("\t\t visitDeclaration ident: " + ctx.IDENT().getText());
+//			System.out.println("\t\t visitDeclaration expression: " + ctx.expression().getText());
+		}
+	  
+	  return visitChildren(ctx); 
+  }
+  
   @Override
   public Expression visitExpression(final ExpressionContext ctx) {
+	if (debugLevel > 0) {
+		System.out.println("\t\t visitExpression " + ctx.getText());
+	}
+
+		
     Expression expr = (Expression) visit(ctx.left);
     if (ctx.right != null && ctx.right.size() > 0) {
       ExpressionList list = new ExpressionList();
@@ -142,7 +304,8 @@ class CSSBuilder extends CssBaseVisitor<Object> {
   }
 
   @Override
-  public Object visitNumberExpr(final NumberExprContext ctx) {
+  public Object visitNumberExpr(final NumberExprContext ctx) {	 
+//	if (debugLevel > 0) System.out.println("\t\t\t visitNumberExpr " + ctx.getText());
     return new NumberExpression(ctx.getText());
   }
 

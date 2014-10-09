@@ -29,4 +29,16 @@ public class URLExpression extends AbstractExpression {
   public String toString() {
     return value;
   }
+  
+  public String parseURL() {
+	  
+	  int location = value.indexOf("url('") + 5;
+	  String urlStr = value.substring(location); //substring after "url('" occurs
+	  int i = 0;
+	  while ( urlStr.charAt(i) != '\'' )
+	    i++;
+	  urlStr = urlStr.substring(0, i);	  
+	  
+	  return urlStr;
+  }
 }

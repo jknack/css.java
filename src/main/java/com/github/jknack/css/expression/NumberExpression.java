@@ -81,6 +81,7 @@ public class NumberExpression extends AbstractExpression {
 
   public NumberExpression(final String value) {
     String[] parts = split(value);
+    //System.out.println("\t\t\t\t NumberExpression " + parts[0]);
     try {
       number = Integer.parseInt(parts[0]);
     } catch (NumberFormatException ex) {
@@ -92,7 +93,9 @@ public class NumberExpression extends AbstractExpression {
   private static String[] split(final String value) {
     for (int i = 0; i < value.length(); i++) {
       char ch = value.charAt(i);
-      if (!Character.isDigit(ch) && ch != '.') {
+      //if (!Character.isDigit(ch) && ch != '.') {
+      // lootsie fix
+      if (!Character.isDigit(ch) && (ch != '.') && (ch != '-')) {
         return new String[]{value.substring(0, i), value.substring(i) };
       }
     }

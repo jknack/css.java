@@ -30,11 +30,17 @@ statement
   | media    #mediaDecl
   | page     #pageDecl
   | fontFace #fontFaceDecl
+  | keyframes #keyframesDecl
   ;
 
 fontFace
   :
     FONT_FACE block
+  ;
+
+keyframes
+  :
+    KEYFRAMES IDENT keyframeblock
   ;
 
 media
@@ -102,7 +108,7 @@ selectorType
   | CLASS                      #classSelector
   | attribute                  #attributeSelector
   | pseudo                     #pseudoSelector
-  | negation                   #notSelector
+  | negation                   #notSelector 
   ;
 
 attribute
@@ -130,6 +136,11 @@ negation
     ':' NOT '(' selectorType ')'
   ;
 
+keyframeblock
+  :
+    '{' number block (number block)* '}'
+  ;
+
 block
   :
     '{' declaration? (';' declaration?)* '}'
@@ -137,7 +148,7 @@ block
 
 declaration
   :
-    IDENT ':' expression priority?
+    IDENT ':' expression (';' expression?)*
   ;
 
 priority
@@ -147,7 +158,7 @@ priority
 
 expression
   :
-    left=term ((',' | '/')? right+=term)*
+    left=term ((',' | '/' | SPACE)? right+=term)*
   ;
 
 term
@@ -213,8 +224,15 @@ UNIT
   | ANGLE
   | TIME
   | FREQUENCY
+  | PIXELS
   ;
 
+fragment
+PIXELS
+  :
+    [pP][xX]
+  ;
+  
 fragment
 PERCENTAGE
   :
@@ -304,6 +322,12 @@ FONT_FACE
   :
     '@'[fF][oO][nN][tT]'-'[fF][aA][cC][eE]
   ;
+  
+KEYFRAMES
+  :
+    '@'[kK][eE][yY][fF][rR][aA][mM][eE][sS]
+    |'@''-'[wW][eE][bB][kK][iI][tT]'-'[kK][eE][yY][fF][rR][aA][mM][eE][sS]    
+  ;  
 
 MEDIA
   :
