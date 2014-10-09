@@ -34,6 +34,10 @@ public class FunctionExpression extends AbstractExpression {
     }
   }
 
+  public String getName() {
+	  return name;
+  }
+  
   public ExpressionList paramenters() {
     return paramenters;
   }

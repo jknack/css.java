@@ -34,6 +34,8 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import com.github.jknack.css.internal.CssLexer;
 import com.github.jknack.css.internal.CssParser;
 import com.github.jknack.css.internal.CssParser.StyleSheetContext;
+import com.github.jknack.css.internal.CssParser.KeyframesContext;
+import com.github.jknack.css.internal.CssParser.KeyframeblockContext;
 
 public class CSS {
 
@@ -84,19 +86,24 @@ public class CSS {
     if (!debug) {
       parser.addErrorListener(new ErrorReporter());
     }
-    if (debug) {
-      for (Token tok : tokens.getTokens()) {
-        CommonToken ct = (CommonToken) tok;
-        String[] tokenNames = lexer.getTokenNames();
-        int type = ct.getType();
-        System.out.println((type > 0 ? tokenNames[type] : "EOF") + "(" + ct.getText() + ")");
-      }
-    }
+    
+//    if (debug) {
+//      for (Token tok : tokens.getTokens()) {
+//        CommonToken ct = (CommonToken) tok;
+//        String[] tokenNames = lexer.getTokenNames();
+//        int type = ct.getType();
+//        System.out.println("Token: " + (type > 0 ? tokenNames[type] : "EOF") + "(" + ct.getText() + ")");
+//      }
+//    }
+    
+    
     StyleSheetContext tree = parser.styleSheet();
     if (debug) {
       System.out.println(tree.toStringTree(parser));
     }
     CSSBuilder builder = new CSSBuilder();
+    
+
     return (StyleSheet) builder.visit(tree);
   }
 }

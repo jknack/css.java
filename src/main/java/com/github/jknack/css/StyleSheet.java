@@ -28,11 +28,17 @@ public class StyleSheet {
   private Charset charset;
 
   private final Deque<Rule> rules = new LinkedList<Rule>();
+  private final Deque<KeyframeBlock> keyframeblocks = new LinkedList<KeyframeBlock>();  
 
   public StyleSheet add(final Rule rule) {
-    rules.add(rule);
-    return this;
+	  rules.add(rule);
+	  return this;
   }
+  
+  public StyleSheet add(final KeyframeBlock keyframeBlock) {
+	  keyframeblocks.add(keyframeBlock);
+	  return this;
+  }  
 
   public StyleSheet charset(final Charset charset) {
     this.charset = notNull(charset, "The charset is required.");
@@ -47,15 +53,32 @@ public class StyleSheet {
     return rules.getFirst();
   }
 
+  // Lootsie
+  public Deque<Rule> getRules() {	  
+	  return rules;
+  }
+  
+  // Lootsie
+  public Deque<KeyframeBlock> getKeyframeBlocks() {	  
+	  return keyframeblocks;
+  }  
+  
   @Override
   public String toString() {
     StringBuilder buffer = new StringBuilder();
+    
     if (charset != null) {
-      buffer.append("@charset \"").append(charset).append("\";");
+    	buffer.append("@charset \"").append(charset).append("\";");
     }
+    
     for (Rule rule : rules) {
-      buffer.append(rule).append("\n");
+    	buffer.append(rule).append("\n");
     }
+    
+    for (KeyframeBlock keyframeBlock : keyframeblocks) {
+    	buffer.append(keyframeBlock).append("\n");
+    }
+    
     return buffer.toString();
   }
 }
